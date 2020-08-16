@@ -16,6 +16,9 @@ import reactor.core.publisher.Mono;
 
 import javax.naming.ServiceUnavailableException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 public class OMDbMovieServiceImpl implements OMDbMovieService {
@@ -37,36 +40,38 @@ public class OMDbMovieServiceImpl implements OMDbMovieService {
                 .build();
     }
     @Override
-    public Mono<Movie> searchMovieByTitle(String apiKey, String title) {
-        return webClient.post()
-                .uri("/?apikey="+apiKey+"&t=+"+title)
-                .retrieve()
-                .onStatus(httpStatus -> HttpStatus.UNAUTHORIZED.equals(httpStatus), (ClientResponse clientResponse) -> {
-                    return Mono.just(new UnknownHostException("Access Denied"));
-                })
-                .onStatus(httpStatus -> HttpStatus.SERVICE_UNAVAILABLE.equals(httpStatus), (ClientResponse clientResponse) -> {
-                    return Mono.just(new ServiceUnavailableException("Service Unavailable"));
-                })
-                .bodyToMono(Movie.class);
-    }
-
-    @Override
-    public Flux<MovieSearch> getMovieInfo(String searchTerm, String apiKey){
-
+    public Mono<List<Movie>> getMovieInfo(String searchTerm, String apiKey) {
         if (!StringUtils.isEmpty(searchTerm) && !StringUtils.isEmpty(apiKey))
-            return  webClient.get()
-                .uri("/?apikey="+apiKey+"&s="+searchTerm)
+            return webClient.get().uri("/?apikey=" + apiKey + "&s=" + searchTerm +"&type=movie")
                 .retrieve()
                 .onStatus(httpStatus -> HttpStatus.UNAUTHORIZED.equals(httpStatus), (ClientResponse clientResponse) -> {
-                     return Mono.just(new UnknownHostException("Access Unauthorised"));
+                    return Mono.just(new UnknownHostException("Access Unauthorised"));
                 })
                 .onStatus(httpStatus -> HttpStatus.SERVICE_UNAVAILABLE.equals(httpStatus), (ClientResponse clientResponse) -> {
-                   return Mono.just(new ServiceUnavailableException("Oops, something went wrong"));
+                    return Mono.just(new ServiceUnavailableException("Oops, something went wrong"));
                 })
-                 .bodyToFlux(MovieSearch.class);
+                .bodyToFlux(MovieSearch.class)
+                .map(MovieSearch::getSearch).map(movieList -> movieList.stream().map(movie -> {
+
+                    return getDirectorInfo(movie.getImdbID(), apiKey);
+
+                })).collectList().flatMap(mapper -> getResult(mapper));
         else
             throw new ApplicationError("Please provide valid key and search term.");
     }
 
+    protected Mono<List<Movie>> getResult(List<Stream<Mono<Movie>>> mov) {
+        List<Mono<Movie>> movieList = new ArrayList<>();
+        for (int i = 0; i < mov.size(); i++) {
+            mov.get(i).forEach(movie -> {
+                movieList.add(movie);
+            });
+        }
+        return Flux.fromIterable(movieList).flatMap(movie -> movie).collectList();
+    }
+
+    protected Mono<Movie> getDirectorInfo(String imdbId, String apiKey) {
+        return webClient.post().uri("/?apikey=" + apiKey + "&i=+" + imdbId).retrieve().bodyToMono(Movie.class);
+    }
 
 }

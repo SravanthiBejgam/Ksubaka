@@ -10,6 +10,11 @@ public class Movie {
     private String releaseYear;
     @JsonProperty("Type")
     private String type;
+    @JsonProperty("imdbID")
+    private String imdbID;
+    @JsonProperty("Director")
+    private String director;
+
 
     public String getMovieTitle() {
         return movieTitle;
@@ -33,6 +38,22 @@ public class Movie {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getImdbID() {
+        return imdbID;
+    }
+
+    public void setImdbID(String imdbID) {
+        this.imdbID = imdbID;
+    }
+
+    public String getDirector() {
+        return director;
+    }
+
+    public void setDirector(String director) {
+        this.director = director;
     }
 
 }

@@ -1,9 +1,9 @@
 package com.cinema.sravs.service;
+import com.cinema.sravs.domain.Result;
+import reactor.core.publisher.Mono;
 
-
-import com.cinema.sravs.domain.TMDBSearchResult;
-import reactor.core.publisher.Flux;
+import java.util.List;
 
 public interface TMDbMovieService {
-     Flux<TMDBSearchResult> getMovieInfo(String name, String apiKey);
+     Mono<List<Result>> getMovieInfo(String name, String apiKey);
 }
