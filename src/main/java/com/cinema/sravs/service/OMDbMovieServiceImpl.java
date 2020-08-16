@@ -1,5 +1,6 @@
 package com.cinema.sravs.service;
 
+import com.cinema.sravs.GeneralConstants;
 import com.cinema.sravs.domain.Movie;
 import com.cinema.sravs.domain.MovieSearch;
 import com.cinema.sravs.error.ApplicationError;
@@ -29,11 +30,10 @@ public class OMDbMovieServiceImpl implements OMDbMovieService {
     private static final String OMDB_API_BASE_URL = "http://omdbapi.com";
     private static final String USER_AGENT = "Spring 5 WebClient";
 
-
-    private final WebClient webClient;
+    private final WebClient omdbWebClient;
 
     public OMDbMovieServiceImpl() {
-        this.webClient = WebClient.builder()
+        this.omdbWebClient = WebClient.builder()
                 .baseUrl(OMDB_API_BASE_URL)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, OMDB_MIME_TYPE)
                 .defaultHeader(HttpHeaders.USER_AGENT, USER_AGENT)
@@ -42,13 +42,13 @@ public class OMDbMovieServiceImpl implements OMDbMovieService {
     @Override
     public Mono<List<Movie>> getMovieInfo(String searchTerm, String apiKey) {
         if (!StringUtils.isEmpty(searchTerm) && !StringUtils.isEmpty(apiKey))
-            return webClient.get().uri("/?apikey=" + apiKey + "&s=" + searchTerm +"&type=movie")
+            return omdbWebClient.get().uri("/?apikey=" + apiKey + "&s=" + searchTerm +"&type=movie")
                 .retrieve()
                 .onStatus(httpStatus -> HttpStatus.UNAUTHORIZED.equals(httpStatus), (ClientResponse clientResponse) -> {
-                    return Mono.just(new UnknownHostException("Access Unauthorised"));
+                    return Mono.just(new UnknownHostException(GeneralConstants.UNAUTHORIZED));
                 })
                 .onStatus(httpStatus -> HttpStatus.SERVICE_UNAVAILABLE.equals(httpStatus), (ClientResponse clientResponse) -> {
-                    return Mono.just(new ServiceUnavailableException("Oops, something went wrong"));
+                    return Mono.just(new ServiceUnavailableException(GeneralConstants.SEVER_ERROR));
                 })
                 .bodyToFlux(MovieSearch.class)
                 .map(MovieSearch::getSearch).map(movieList -> movieList.stream().map(movie -> {
@@ -57,7 +57,7 @@ public class OMDbMovieServiceImpl implements OMDbMovieService {
 
                 })).collectList().flatMap(mapper -> getResult(mapper));
         else
-            throw new ApplicationError("Please provide valid key and search term.");
+            throw new ApplicationError(GeneralConstants.APPLICATION_ERROR);
     }
 
     protected Mono<List<Movie>> getResult(List<Stream<Mono<Movie>>> mov) {
@@ -71,7 +71,7 @@ public class OMDbMovieServiceImpl implements OMDbMovieService {
     }
 
     protected Mono<Movie> getDirectorInfo(String imdbId, String apiKey) {
-        return webClient.post().uri("/?apikey=" + apiKey + "&i=+" + imdbId).retrieve().bodyToMono(Movie.class);
+        return omdbWebClient.post().uri("/?apikey=" + apiKey + "&i=+" + imdbId).retrieve().bodyToMono(Movie.class);
     }
 
 }

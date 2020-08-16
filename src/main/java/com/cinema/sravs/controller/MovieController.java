@@ -1,5 +1,6 @@
 package com.cinema.sravs.controller;
 
+import com.cinema.sravs.GeneralConstants;
 import com.cinema.sravs.domain.Movie;
 import com.cinema.sravs.domain.Result;
 import com.cinema.sravs.service.OMDbMovieService;
@@ -31,13 +32,12 @@ public class MovieController {
     @RequestMapping(value = "/omdbInfo", method= RequestMethod.GET)
     public Mono<List<Movie>> getOmDbInfo(@RequestParam String name) {
         logger.info("OMDB Search Term", name);
-        return omDbMovieService.getMovieInfo(name,env.getProperty("omdb.api.key"));
-
+        return omDbMovieService.getMovieInfo(name,env.getProperty(GeneralConstants.OMDB_KEY));
     }
 
     @RequestMapping(value = "/tmdbInfo", method= RequestMethod.GET)
     public Mono<List<Result>> getTmDBMovieInfo(@RequestParam String name) {
         logger.info("TMDB Search Term", name);
-        return tmDbMovieService.getMovieInfo(name, env.getProperty("tmdb.api.key"));
+        return tmDbMovieService.getMovieInfo(name, env.getProperty(GeneralConstants.TMDB_KEY));
     }
 }

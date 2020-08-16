@@ -8,8 +8,6 @@ public class Movie {
     private String movieTitle;
     @JsonProperty("Year")
     private String releaseYear;
-    @JsonProperty("Type")
-    private String type;
     @JsonProperty("imdbID")
     private String imdbID;
     @JsonProperty("Director")
@@ -30,14 +28,6 @@ public class Movie {
 
     public void setReleaseYear(String releaseYear) {
         this.releaseYear = releaseYear;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     public String getImdbID() {

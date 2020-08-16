@@ -1,5 +1,7 @@
 package com.cinema.sravs.service;
 
+import com.cinema.sravs.GeneralConstants;
+import com.cinema.sravs.domain.Credits;
 import com.cinema.sravs.domain.Result;
 import com.cinema.sravs.domain.TMDBSearchResult;
 import com.cinema.sravs.error.ApplicationError;
@@ -25,10 +27,10 @@ public class TMDbMovieServiceImpl implements TMDbMovieService {
     private static final Logger logger = LoggerFactory.getLogger(TMDbMovieServiceImpl.class);
     private static final String TMDB_API_BASE_URL = "https://api.themoviedb.org/3";
 
-    private final WebClient webClient1;
+    private final WebClient tmdbWebClient;
 
     public TMDbMovieServiceImpl() {
-        this.webClient1 = WebClient.builder()
+        this.tmdbWebClient = WebClient.builder()
                 .baseUrl(TMDB_API_BASE_URL)
                 .build();
     }
@@ -37,12 +39,12 @@ public class TMDbMovieServiceImpl implements TMDbMovieService {
     public Mono<List<Result>> getMovieInfo(String searchTerm, String api_key) {
 
         if (!StringUtils.isEmpty(searchTerm) && !StringUtils.isEmpty(api_key))
-            return webClient1.get().uri("/search/movie?query="+searchTerm+"&api_key="+api_key).retrieve()
+            return tmdbWebClient.get().uri("/search/movie?query="+searchTerm+"&api_key="+api_key).retrieve()
                 .onStatus(httpStatus -> HttpStatus.UNAUTHORIZED.equals(httpStatus), (ClientResponse clientResponse) -> {
-                    return Mono.just(new UnknownHostException("Access Unauthorised"));
+                    return Mono.just(new UnknownHostException(GeneralConstants.UNAUTHORIZED));
                 })
                 .onStatus(httpStatus -> HttpStatus.SERVICE_UNAVAILABLE.equals(httpStatus), (ClientResponse clientResponse) -> {
-                    return Mono.just(new ServiceUnavailableException("Service Unavailable"));
+                    return Mono.just(new ServiceUnavailableException(GeneralConstants.SEVER_ERROR));
                 }).bodyToFlux( TMDBSearchResult.class)
                     .map(TMDBSearchResult::getResults).map(resultList -> resultList.stream().map(result -> {
 
@@ -50,7 +52,7 @@ public class TMDbMovieServiceImpl implements TMDbMovieService {
 
                     })).collectList().flatMap(mapper -> getResult(mapper));
         else
-            throw new ApplicationError("Please provide valid key and search term.");
+            throw new ApplicationError(GeneralConstants.APPLICATION_ERROR);
 
     }
 
@@ -65,7 +67,28 @@ public class TMDbMovieServiceImpl implements TMDbMovieService {
     }
 
     protected Mono<Result> getDirectorInfo(String imdbId, String apiKey) {
-        return webClient1.get().uri("/movie/" + imdbId + "?api_key=" + apiKey).retrieve().bodyToMono(Result.class);
+        return tmdbWebClient.get().uri("/movie/" + imdbId + "?api_key=" + apiKey).retrieve().bodyToMono(Result.class);
     }
 
+    /*
+    * This method is to get director information from Credits->Crew.
+    * */
+    protected Mono<Result> getDirectorInfo(Result bean,int imdbId, String apiKey) {
+
+        Mono<Object> directors = tmdbWebClient.get().uri("/movie/" + imdbId + "/credits?api_key=" + apiKey)
+                .retrieve().bodyToMono(Credits.class)
+                .map(abc -> abc.getCrew())
+                .map(crewList -> crewList.stream()
+                        .filter(crew -> crew.getJob().equals("Director"))
+                        .findFirst()
+                        .map(crew ->crew.getName())
+                );
+
+        directors.subscribe(x ->bean.setDirector(x.toString()));
+
+        logger.info("-->"+bean.getDirector());
+
+        return tmdbWebClient.get().uri("/movie/" + imdbId + "?api_key=" + apiKey).retrieve().bodyToMono(Result.class);
+
+    }
 }
