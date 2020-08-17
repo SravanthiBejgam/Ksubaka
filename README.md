@@ -4,9 +4,7 @@
 Ksubaka : Movie Information
 
 ## Project Description
-This application uses WebClient(Reactive Programming) to fetch data from 2 different public websites.
-1) Get Movie db ids
-2) Getting director using movie ids.
+This application uses Spring Boot webflux to retrieve movie information from two different movie db api's (themoviedb and ombd).
 
 ### Prerequisites
 Java 8
@@ -14,20 +12,25 @@ Maven
 
 ### Build and Run
 
-mvn clean
-mvn install
-mvn spring-boot:run
+* mvn clean
+* mvn install
+* mvn spring-boot:run
 
 ## Running the tests
 mvn test
 
 ## Tests with movie name
 
-http://localhost:8080/movies/omdbInfo?name=indiana jones
-http://localhost:8080/movies/tmdbInfo?name=indiana jones
+* **Request
+* http://localhost:8080/movies/omdbInfo?name=indiana jones
+* http://localhost:8080/movies/tmdbInfo?name=indiana jones
 
-curl -X GET --header 'Accept: application/json' 'http://localhost:8080/movies/tmdbInfo?name=indiana jones'
-curl -X GET --header 'Accept: application/json' 'http://localhost:8080/movies/omdbInfo?name=indiana jones'
+* **Response
+* {"Title":"Indiana Jones and the Kingdom of the Crystal Skull","Year": "2008","ImdbID": "tt0367882", "Director":"Steven Spielberg"}
+* {"id": "89","title": "Indiana Jones and the Kingdom of the Crystal Skull","release_date": "2008-05-24", "Director" : "Steven Spielberg"}
+
+* curl -X GET --header 'Accept: application/json' 'http://localhost:8080/movies/tmdbInfo?name=indiana jones'
+* curl -X GET --header 'Accept: application/json' 'http://localhost:8080/movies/omdbInfo?name=indiana jones'
 
 ## Built With
 
@@ -38,7 +41,7 @@ curl -X GET --header 'Accept: application/json' 'http://localhost:8080/movies/om
 
 0.0.1-SNAPSHOT
 
-##Git Url
+## Git Url
 
 https://github.com/SravanthiBejgam/Ksubaka
 
@@ -53,5 +56,5 @@ NA
 
 ## References
 
-http://omdbapi.com
-https://api.themoviedb.org/3
+* http://omdbapi.com
+* https://api.themoviedb.org/3
