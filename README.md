@@ -21,16 +21,14 @@ mvn test
 
 ## Tests with movie name
 
-* **Request
+* **Request***
 * http://localhost:8080/movies/omdbInfo?name=indiana jones
 * http://localhost:8080/movies/tmdbInfo?name=indiana jones
-
-* **Response
-* {"Title":"Indiana Jones and the Kingdom of the Crystal Skull","Year": "2008","ImdbID": "tt0367882", "Director":"Steven Spielberg"}
-* {"id": "89","title": "Indiana Jones and the Kingdom of the Crystal Skull","release_date": "2008-05-24", "Director" : "Steven Spielberg"}
-
 * curl -X GET --header 'Accept: application/json' 'http://localhost:8080/movies/tmdbInfo?name=indiana jones'
 * curl -X GET --header 'Accept: application/json' 'http://localhost:8080/movies/omdbInfo?name=indiana jones'
+
+* **Response**
+* {"Title":"Indiana Jones and the Kingdom of the Crystal Skull","Year": "2008","ImdbID": "tt0367882", "Director":"Steven Spielberg"}
 
 ## Built With
 
